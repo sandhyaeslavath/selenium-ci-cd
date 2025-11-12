@@ -2,35 +2,37 @@ pipeline {
     agent any
 
     tools {
-        jdk 'Java17'       // Jenkins JDK installation name (configure under Manage Jenkins → Tools)
-        maven 'Maven3'     // Jenkins Maven installation name
+        // Ensure you configured these in "Manage Jenkins → Tools"
+        jdk 'Java17'
+        maven 'Maven3'
     }
 
     stages {
+
         stage('Checkout') {
             steps {
                 echo 'Cloning the GitHub repository...'
-                git branch: 'main', url: 'https://github.com/<your-username>/selenium-ci-cd.git'
+                git url: 'https://github.com/sandhyaeslavath/selenium-ci-cd.git', branch: 'main'
             }
         }
 
         stage('Build') {
             steps {
-                echo 'Building the Maven project...'
-                bat 'mvn clean compile'
+                echo 'Building the project using Maven...'
+                bat 'mvn clean install'
             }
         }
 
         stage('Test') {
             steps {
-                echo 'Running Selenium tests...'
+                echo 'Running Selenium test cases...'
                 bat 'mvn test'
             }
         }
 
         stage('Package') {
             steps {
-                echo 'Packaging the project...'
+                echo 'Packaging the application...'
                 bat 'mvn package'
             }
         }
@@ -39,7 +41,13 @@ pipeline {
     post {
         always {
             echo 'Publishing test results...'
-            junit '**/target/surefire-reports/*.xml'
+            junit 'target/surefire-reports/*.xml'
+        }
+        success {
+            echo 'Build succeeded!'
+        }
+        failure {
+            echo 'Build failed!'
         }
     }
 }
