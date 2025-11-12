@@ -1,53 +1,48 @@
 pipeline {
     agent any
 
-    tools {
-        // Ensure you configured these in "Manage Jenkins → Tools"
-        jdk 'Java17'
-        maven 'Maven3'
-    }
-
     stages {
-
         stage('Checkout') {
             steps {
-                echo 'Cloning the GitHub repository...'
-                git url: 'https://github.com/sandhyaeslavath/selenium-ci-cd.git', branch: 'main'
+                echo 'Cloning repository...'
+                git branch: 'main', url: 'https://github.com/sandhyaeslavath/selenium-ci-cd.git'
             }
         }
 
         stage('Build') {
             steps {
                 echo 'Building the project using Maven...'
-                bat 'mvn clean install'
+                bat 'mvn clean compile'
             }
         }
 
         stage('Test') {
             steps {
-                echo 'Running Selenium test cases...'
+                echo 'Running Selenium tests...'
                 bat 'mvn test'
-            }
-        }
-
-        stage('Package') {
-            steps {
-                echo 'Packaging the application...'
-                bat 'mvn package'
             }
         }
     }
 
     post {
         always {
-            echo 'Publishing test results...'
-            junit 'target/surefire-reports/*.xml'
+            echo 'Checking for test results...'
+            script {
+                if (fileExists('target/surefire-reports')) {
+                    echo 'Publishing test reports...'
+                    junit 'target/surefire-reports/*.xml'
+                } else {
+                    echo '⚠️ No test reports found, skipping test publishing.'
+                }
+            }
         }
+
         success {
-            echo 'Build succeeded!'
+            echo '✅ Build completed successfully!'
         }
+
         failure {
-            echo 'Build failed!'
+            echo '❌ Build failed. Please check the logs.'
         }
     }
 }
